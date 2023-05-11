@@ -70,6 +70,9 @@ class GridText:
 
         if len(sentence_transcription_entries) != len(sentence_translation_entries):
             raise IndexError("Sentence tiers differ in length!")
+        sentences = [Sentence(sentence_transcription_entries[ind][2], sentence_translation_entries[ind][2])
+                     for ind in range(len(sentence_transcription_entries))]
+
         device_id = 0
         for start_device, end_device, label_device in annotation_form_entries:
             if annotation_indexation_entries[device_id][2] in ('pred', ''):
@@ -81,12 +84,14 @@ class GridText:
 
                 if (start_sentence <= start_device < end_sentence):
                     break
-
                 sentence_id += 1
 
             if label_device not in label_sentence and label_device != 'Ø':
                 print(label_device, ':', label_sentence)
                 raise IndexError("Device is not found")
+
+            if label_device == 'Ø':
+                label_device = annotation_form_entries[device_id - 1][2]
 
             reference_tracking_device = ReferenceTrackingDevice(label_device,
                                                                 annotation_indexation_entries[device_id][2],
@@ -97,20 +102,27 @@ class GridText:
 
             devices.append(reference_tracking_device)
             device_id += 1
-        return devices
+        return devices, sentences
 
-    def calculate_distance(self, reference_tracking_devices):
-        for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
-            if not tracking_device.startswith(('PROX', 'MED', 'DIST', 'SELF')):
-                continue
-            previous_referring_id = tracking_device_id - 1
+def calculate_distance(reference_tracking_devices, sentences):
+    for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
+        if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'SELF')):
+            continue
+        previous_referring_id = tracking_device_id - 1
+        rd = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
 
-            while previous_referring_id != -1:
-                if tracking_device.referent == reference_tracking_devices[previous_referring_id].referent:
-                    print(tracking_device.form, reference_tracking_devices[previous_referring_id].form)
-                    break
-                previous_referring_id -= 1
-
+        while previous_referring_id != -1:
+            previous_referring = reference_tracking_devices[previous_referring_id]
+            sentence_transcription = previous_referring.source_sentence.transcription
+            if tracking_device.referent == previous_referring.referent:
+                rd += len(sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
+                sentences_transcriptions = [sent.transcription for sent in sentences]
+                rd += len(''.join(sentences_transcriptions[sentences_transcriptions.index(sentence_transcription) + 1:sentences_transcriptions.index(tracking_device.source_sentence.transcription) - 1]).split())
+                print(tracking_device.form, previous_referring.form, rd, sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
+                break
+            previous_referring_id -= 1
+        else:
+            IndexError("Previous referring is not found")
 
 if __name__ == '__main__':
     path_to_test_tg = join('annotated_textgrids', 'kna_pears_alj_6.TextGrid')
@@ -118,6 +130,6 @@ if __name__ == '__main__':
                  'annotation_form', 'annotation_indexation', 'annotation_device']
 
     test_tg = GridText.from_tg_file(path_to_test_tg, *tier_names)
-    for device in test_tg.get_reference_tracking_devices():
-        print(device.device, device.start, device.source_sentence.translation)
+    reference_tracking_devices, sentences = test_tg.get_reference_tracking_devices()
+    calculate_distance(reference_tracking_devices, sentences)
 
