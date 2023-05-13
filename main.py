@@ -1,5 +1,6 @@
 from praatio import textgrid
 from os.path import join
+from os import walk
 
 
 class Sentence:
@@ -105,31 +106,94 @@ class GridText:
         return devices, sentences
 
 def calculate_distance(reference_tracking_devices, sentences):
+    ad_list = []
+
     for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
         if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'SELF')):
             continue
         previous_referring_id = tracking_device_id - 1
-        rd = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
-
+        ad = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
         while previous_referring_id != -1:
             previous_referring = reference_tracking_devices[previous_referring_id]
             sentence_transcription = previous_referring.source_sentence.transcription
             if tracking_device.referent == previous_referring.referent:
-                rd += len(sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
+                ad += len(sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
                 sentences_transcriptions = [sent.transcription for sent in sentences]
-                rd += len(''.join(sentences_transcriptions[sentences_transcriptions.index(sentence_transcription) + 1:sentences_transcriptions.index(tracking_device.source_sentence.transcription) - 1]).split())
-                print(tracking_device.form, previous_referring.form, rd, sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
+                ad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(sentence_transcription) + 1:sentences_transcriptions.index(tracking_device.source_sentence.transcription)]).split())
+                ad_seconds = tracking_device.start - previous_referring.end
+                print(tracking_device.form, previous_referring.form, ad, ad_seconds)
+                ad_list.append((tracking_device, previous_referring, ad, ad_seconds))
                 break
             previous_referring_id -= 1
         else:
             IndexError("Previous referring is not found")
 
-if __name__ == '__main__':
-    path_to_test_tg = join('annotated_textgrids', 'kna_pears_alj_6.TextGrid')
-    tier_names = ['translation', 'transcription_cyr', 'transcription_lat',
-                 'annotation_form', 'annotation_indexation', 'annotation_device']
+    return ad_list
 
-    test_tg = GridText.from_tg_file(path_to_test_tg, *tier_names)
-    reference_tracking_devices, sentences = test_tg.get_reference_tracking_devices()
-    calculate_distance(reference_tracking_devices, sentences)
+def auto_annotation(data_list):
+    auto_annotated_data_list = []
+    for tracking_device, previous_referring, ad, ad_seconds in data_list:
+        if '_NP' in tracking_device.device:
+            syntactic_position = 'ADNOM'
+        else:
+            syntactic_position = 'INDEP'
+
+        if 'PROX' in tracking_device.device:
+            demonstrative_type = 'PROX'
+        elif 'MED' in tracking_device.device:
+            demonstrative_type = 'MED'
+        elif 'DIST' in tracking_device.device:
+            demonstrative_type = 'DIST'
+        elif 'SELF' in tracking_device.device:
+            demonstrative_type = 'SELF'
+        else:
+            raise NameError("Type is not found!")
+
+        if tracking_device.referent in ('man', 'man2', 'boys', 'boy', 'girl', 'goat'):
+            animacy = 'ANIM'
+        else:
+            animacy = 'INANIM'
+        auto_annotated_data_list.append((tracking_device, previous_referring,
+                                        ad, ad_seconds, syntactic_position, demonstrative_type, animacy))
+
+    return auto_annotated_data_list
+def write_ad_values(data_list, filename):
+    with open('ad_values.csv', 'a', encoding='utf-8') as f:
+        for tracking_device, previous_referring, ad, ad_seconds, syntactic_position, demonstrative_type, animacy \
+                in data_list:
+            f.write('\t'.join([str(ad), str(ad_seconds), demonstrative_type, syntactic_position, animacy,
+                               tracking_device.device, tracking_device.form, tracking_device.referent,
+                               str(tracking_device.start), str(tracking_device.end), tracking_device.source_sentence.transcription,
+                               tracking_device.source_sentence.translation,
+                               previous_referring.device, previous_referring.form, previous_referring.referent,
+                               str(previous_referring.start), str(previous_referring.end),
+                               previous_referring.source_sentence.transcription,
+                               previous_referring.source_sentence.translation,
+                               filename
+                               ]) + '\n')
+
+def main():
+    with open('ad_values.csv', 'w', encoding='utf-8') as f:
+        f.write('\t'.join(['ad', 'ad_seconds', 'dem', 'synt_pos', 'anim',
+                           'anaphor_device', 'anaphor_form', 'anaphor_referent',
+                           'anaphor_start', 'anaphor_end', 'anaphor_sentence_transcription',
+                           'anaphor_sentence_translation',
+                           'previous_device', 'previous_form', 'previous_referent',
+                           'previous_start', 'previous_end',
+                           'previous_sentence_transcription',
+                           'previous_sentence_translation',
+                           'filename']) + '\n')
+
+    tier_names = ['translation', 'transcription_cyr', 'transcription_lat',
+                  'annotation_form', 'annotation_indexation', 'annotation_device']
+
+    for root, dirs, files in walk('annotated_textgrids'):
+        for filename in files:
+            path_to_tg = join('annotated_textgrids', filename)
+            tg = GridText.from_tg_file(path_to_tg, *tier_names)
+            reference_tracking_devices, sentences = tg.get_reference_tracking_devices()
+            write_ad_values(auto_annotation(calculate_distance(reference_tracking_devices, sentences)), filename)
+
+if __name__ == '__main__':
+    main()
 
