@@ -158,10 +158,11 @@ def auto_annotation(data_list):
 
     return auto_annotated_data_list
 def write_ad_values(data_list, filename):
+    lang = filename.split('_')[0]
     with open('ad_values.csv', 'a', encoding='utf-8') as f:
         for tracking_device, previous_referring, ad, ad_seconds, syntactic_position, demonstrative_type, animacy \
                 in data_list:
-            f.write('\t'.join([str(ad), str(ad_seconds), demonstrative_type, syntactic_position, animacy,
+            f.write('\t'.join([lang, str(ad), str(ad_seconds), demonstrative_type, syntactic_position, animacy,
                                tracking_device.device, tracking_device.form, tracking_device.referent,
                                str(tracking_device.start), str(tracking_device.end), tracking_device.source_sentence.transcription,
                                tracking_device.source_sentence.translation,
@@ -174,7 +175,7 @@ def write_ad_values(data_list, filename):
 
 def main():
     with open('ad_values.csv', 'w', encoding='utf-8') as f:
-        f.write('\t'.join(['ad', 'ad_seconds', 'dem', 'synt_pos', 'anim',
+        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'dem', 'synt_pos', 'anim',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
                            'anaphor_start', 'anaphor_end', 'anaphor_sentence_transcription',
                            'anaphor_sentence_translation',
@@ -191,7 +192,11 @@ def main():
         for filename in files:
             path_to_tg = join('annotated_textgrids', filename)
             tg = GridText.from_tg_file(path_to_tg, *tier_names)
-            reference_tracking_devices, sentences = tg.get_reference_tracking_devices()
+            try:
+                reference_tracking_devices, sentences = tg.get_reference_tracking_devices()
+            except Exception as ex:
+                print(filename, str(ex))
+                break
             write_ad_values(auto_annotation(calculate_distance(reference_tracking_devices, sentences)), filename)
 
 if __name__ == '__main__':
