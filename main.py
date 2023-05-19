@@ -109,7 +109,7 @@ def calculate_distance(reference_tracking_devices, sentences):
     ad_list = []
 
     for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
-        if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'SELF')):
+        if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'SELF', 'ABOVE', 'BELOW')):
             continue
         previous_referring_id = tracking_device_id - 1
         ad = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
@@ -146,6 +146,10 @@ def auto_annotation(data_list):
             demonstrative_type = 'DIST'
         elif 'SELF' in tracking_device.device:
             demonstrative_type = 'SELF'
+        elif 'ABOVE' in tracking_device.device:
+            demonstrative_type = 'ABOVE'
+        elif 'BELOW' in tracking_device.device:
+            demonstrative_type = 'BELOW'
         else:
             raise NameError("Type is not found!")
 
