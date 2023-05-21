@@ -1,0 +1,465 @@
+---
+title: "Plots"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(DT)
+
+# prepare data
+data = read_tsv('ad_values.csv')
+# kina rutul
+data %>% 
+  filter(lang=='kna') -> kna_data
+kna_data %>% 
+  filter(dem != 'SELF') -> kna_data  # only for demonstartives
+# mehweb dargwa
+data %>% 
+  filter(lang=='mhb') -> mhb_data
+
+dems_order = c("PROX", "MED", "DIST", "ABOVE", "BELOW")
+
+
+```
+
+# General summary
+
+## Tables
+
+```{r echo=FALSE}
+data$dem = factor(data$dem)
+data$synt_pos = factor(data$synt_pos)
+data$lang = factor(data$lang)
+data$anim = factor(data$anim)
+data$anaphor_device = factor(data$anaphor_device)
+data$anaphor_referent = factor(data$anaphor_referent)
+data$previous_device = factor(data$previous_device)
+data$previous_referent = factor(data$previous_referent)
+data$filename = factor(data$filename)
+
+data %>% 
+  datatable(class = 'cell-border stripe', 
+    rownames = FALSE, 
+    filter = 'top', 
+    extensions = 'Buttons',
+    options = list(pageLength = 5, 
+                   autoWidth = TRUE, 
+                   scrollX = TRUE,
+                   info = FALSE,
+                   dom = 'fBltp',
+                   buttons = list(list(extend = 'collection',
+                                       buttons = c('csv', 'excel', 'pdf'),
+                                       text = '<i class="fas fa-download"></i>')),
+                   paginate = TRUE))
+```
+
+### Kina Rutul
+
+```{r echo=FALSE, message=FALSE}
+kna_data %>%
+  group_by(dem, synt_pos) %>% 
+  summarise(n=n())
+kna_data %>%
+  group_by(synt_pos) %>% 
+  summarise(n=n())
+kna_data %>%
+  group_by(dem) %>% 
+  summarise(n=n())
+```
+
+### Mehweb Dargwa
+
+```{r echo=FALSE, message=FALSE}
+mhb_data %>%
+  group_by(dem, synt_pos) %>% 
+  summarise(n=n())
+mhb_data %>%
+  group_by(synt_pos) %>% 
+  summarise(n=n())
+mhb_data %>%
+  group_by(dem) %>% 
+  summarise(n=n())
+```
+
+## Plots
+
+```{r include=FALSE}
+# prepare data
+data %>% 
+  filter(synt_pos=='INDEP') %>% 
+  filter(dem != 'SELF') %>% 
+  group_by(lang, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> general_indep_plot1
+kna_data %>%
+  group_by(dem, synt_pos) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> kna_data_plot1_per_dems
+kna_data %>%
+  group_by(synt_pos, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> kna_data_plot1_per_synt_pos
+mhb_data %>%
+  group_by(dem, synt_pos) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> mhb_data_plot1_per_dems
+mhb_data %>%
+  group_by(synt_pos, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> mhb_data_plot1_per_synt_pos
+
+# per speaker
+kna_data %>%
+  filter(synt_pos=='INDEP') %>% 
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> kna_data_plot2
+kna_data_plot2$filename = str_replace(kna_data_plot2$filename, '.TextGrid', '')
+kna_data_plot2$filename = str_replace(kna_data_plot2$filename, 'kna_pears_', '')
+mhb_data %>%
+  filter(synt_pos=='INDEP') %>% 
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> mhb_data_plot2
+mhb_data_plot2$filename = str_replace(mhb_data_plot2$filename, '.TextGrid', '')
+mhb_data_plot2$filename = str_replace(mhb_data_plot2$filename, 'mhb_pears_', '')
+
+kna_data %>%
+  filter(synt_pos=='ADNOM') %>% 
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> kna_data_plot2_adn
+kna_data_plot2_adn$filename = str_replace(kna_data_plot2_adn$filename, '.TextGrid', '')
+kna_data_plot2_adn$filename = str_replace(kna_data_plot2_adn$filename, 'kna_pears_', '')
+mhb_data %>%
+  filter(synt_pos=='ADNOM') %>% 
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> mhb_data_plot2_adn
+mhb_data_plot2_adn$filename = str_replace(mhb_data_plot2_adn$filename, '.TextGrid', '')
+mhb_data_plot2_adn$filename = str_replace(mhb_data_plot2_adn$filename, 'mhb_pears_', '')
+```
+
+### Number of uses of each demonstrative in the independent position
+
+```{r echo=FALSE}
+ggplot(general_indep_plot1, aes(x=lang, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Language")+
+  ylab("Percentage (per language)")
+```
+
+### Syntactic positions per demonstratives
+
+```{r echo=FALSE}
+ggplot(kna_data_plot1_per_dems, aes(x=factor(dem, dems_order), y=perc, fill=synt_pos)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("ADNOM" = "#E41A1C","INDEP" = "#377EB8"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Syntactic position")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot1_per_dems, aes(x=factor(dem, dems_order), y=perc, fill=synt_pos)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("ADNOM" = "#E41A1C","INDEP" = "#377EB8"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Syntactic position")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+### Demonstratives per syntactic position
+
+```{r echo=FALSE}
+ggplot(kna_data_plot1_per_synt_pos, aes(x=synt_pos, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  #scale_fill_brewer(palette="Dark2")+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Syntactic position")+
+  ylab("Percentage (per synt. position)")
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot1_per_synt_pos, aes(x=synt_pos, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  #scale_fill_brewer(palette="Dark2")+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Syntactic position")+
+  ylab("Percentage (per synt. position)")
+```
+
+### Independent demonstratives per speaker (sorted by the total number of uses)
+
+```{r echo=FALSE}
+ggplot(kna_data_plot2, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot2, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
+```
+
+### Adnominal demonstratives per speaker (sorted by the total number of uses)
+
+```{r echo=FALSE}
+ggplot(kna_data_plot2_adn, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot2_adn, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
+```
+
+# Anaphoric Distance
+
+```{r include=FALSE}
+# prepare data
+kna_data %>% 
+  filter(synt_pos=='INDEP') -> kna_data_plot3
+kna_data_plot3$filename = str_replace(kna_data_plot3$filename, '.TextGrid', '')
+kna_data_plot3$filename = str_replace(kna_data_plot3$filename, 'kna_pears_', '')
+# kna_target = c('sai_9', 'shk_10', 'hdz_7', 'ldm_4', 'rhn_12', 'man_13')
+# kna_target = c('saa_8', 'vdm_3')
+# kna_data_plot3 %>% 
+#   filter(filename %in% kna_target) -> kna_data_plot3
+mhb_data %>% 
+  filter(synt_pos=='INDEP') -> mhb_data_plot3
+mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, '.TextGrid', '')
+mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, 'mhb_pears_', '')
+
+kna_data %>% 
+  filter(synt_pos=='ADNOM') -> kna_data_plot3_adn
+kna_data_plot3_adn$filename = str_replace(kna_data_plot3_adn$filename, '.TextGrid', '')
+kna_data_plot3_adn$filename = str_replace(kna_data_plot3_adn$filename, 'kna_pears_', '')
+mhb_data %>% 
+  filter(synt_pos=='ADNOM') -> mhb_data_plot3_adn
+mhb_data_plot3_adn$filename = str_replace(mhb_data_plot3_adn$filename, '.TextGrid', '')
+mhb_data_plot3_adn$filename = str_replace(mhb_data_plot3_adn$filename, 'mhb_pears_', '')
+```
+
+## Independent position
+
+### Seconds
+
+```{r echo=FALSE}
+kna_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+### Words
+
+```{r echo=FALSE}
+kna_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+## Adnominal position
+
+```{r echo=FALSE}
+kna_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+```{r echo=FALSE}
+mhb_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+### Words
+
+```{r echo=FALSE}
+kna_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+```{r echo=FALSE}
+mhb_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
