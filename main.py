@@ -51,13 +51,6 @@ class GridText:
         return GridText(filepath, translation, cyrillic_transcription, latin_transcription,
                         annotation_form, annotation_indexation, annotation_device, annotation_mention)
 
-    @classmethod
-    def get_labels(cls, layer):
-        entries = layer.entryList
-        labels = [label for _, _, label in entries]
-
-        return labels
-
     def get_reference_tracking_devices(self):  # shitty code
 
         sentence_transcription_entries = self.latin_transcription.entryList
@@ -116,63 +109,86 @@ class GridText:
             device_id += 1
         return devices, sentences
 
+    def get_text_length_words(self):
+        entries = self.latin_transcription.entryList
+        text_length = len(' '.join([label for _, _, label in entries]).split())
+
+        return text_length
+
 def calculate_distance(reference_tracking_devices, sentences):
     ad_list = []
 
-    for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
-        if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'SELF', 'ABOVE', 'BELOW')):
+    for tracking_id, tracking_device in enumerate(reference_tracking_devices):
+        if not tracking_device.device.startswith(('PROX', 'MED', 'DIST', 'ABOVE', 'BELOW')):
             continue
-        previous_referring_id = tracking_device_id - 1
-        ad = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
-        while previous_referring_id != -1:
-            previous_referring = reference_tracking_devices[previous_referring_id]
-            sentence_transcription = previous_referring.source_sentence.transcription
-            if tracking_device.referent == previous_referring.referent:
-                ad += len(sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
+
+        previous_id = tracking_id - 1
+        tracking_source_transcription = tracking_device.source_sentence.transcription
+        tracking_form = tracking_device.form
+        tracking_referent = tracking_device.referent
+        tracking_start = tracking_device.start
+        tracking_position = tracking_source_transcription.find(tracking_form)
+        len_tracking_device_sentence = len(tracking_source_transcription[:tracking_position].split())
+        ad = len_tracking_device_sentence
+
+        while previous_id != -1:
+            previous_referring = reference_tracking_devices[previous_id]
+            previous_source_transcription = previous_referring.source_sentence.transcription
+            previous_referent = previous_referring.referent
+            previous_form = previous_referring.form
+            previous_end = previous_referring.end
+            previous_position = previous_source_transcription.find(previous_form)
+
+            if tracking_referent == previous_referent:
+                ad += len(previous_source_transcription[previous_position:].split())
                 sentences_transcriptions = [sent.transcription for sent in sentences]
-                ad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(sentence_transcription) + 1:sentences_transcriptions.index(tracking_device.source_sentence.transcription)]).split())
-                if previous_referring.source_sentence.transcription == tracking_device.source_sentence.transcription:
-                    ad = len(sentence_transcription[sentence_transcription.find(previous_referring.form):sentence_transcription.find(tracking_device.form)].split())
-                ad_seconds = tracking_device.start - previous_referring.end
-                print(tracking_device.form, previous_referring.form, ad, ad_seconds)
-                ad_list.append((tracking_device, previous_referring, ad, ad_seconds))
+                ad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(previous_source_transcription) + 1:sentences_transcriptions.index(tracking_source_transcription)]).split())
+
+                if previous_source_transcription == tracking_source_transcription:
+                    ad = len(previous_source_transcription[previous_position:tracking_position].split())
+                ad_seconds = tracking_start - previous_end
+
+                wad = ad
+                if previous_referring.device != 'ZERO':
+                    wad_seconds = ad_seconds
+                    explicit_referring = previous_referring
+                else:
+                    previous_id -= 1
+                    while previous_id != -1:
+                        explicit_referring = reference_tracking_devices[previous_id]
+                        explicit_source_transcription = explicit_referring.source_sentence.transcription
+                        explicit_referent = explicit_referring.referent
+                        explicit_form = explicit_referring.form
+                        explicit_device = explicit_referring.device
+                        explicit_end = explicit_referring.end
+                        explicit_position = explicit_source_transcription.find(explicit_form)
+
+                        if tracking_referent == explicit_referent and explicit_device != 'ZERO':
+                            wad += len(explicit_source_transcription[explicit_position:].split())
+                            wad += len(previous_source_transcription[:previous_position].split())
+                            sentences_transcriptions = [sent.transcription for sent in sentences]
+                            wad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(explicit_source_transcription) + 1:sentences_transcriptions.index(previous_source_transcription)]).split())
+
+                            if explicit_source_transcription == previous_source_transcription:
+                                wad = len(explicit_source_transcription[explicit_position:previous_position].split()) + ad
+                            wad_seconds = tracking_start - explicit_end
+                            break
+                        previous_id -= 1
+                    else:
+                        raise IndexError(f"Previous explicit referring is not found {tracking_device.form, tracking_start}")
+
+                print(tracking_device.form, previous_referring.form, explicit_referring.form, ad, ad_seconds, wad, wad_seconds)
+                ad_list.append((tracking_device, previous_referring, explicit_referring, ad, ad_seconds, wad, wad_seconds))
                 break
-            previous_referring_id -= 1
+            previous_id -= 1
         else:
-            IndexError("Previous referring is not found")
-
-    return ad_list
-
-def calculate_distance_medial_distl(reference_tracking_devices, sentences):  # only for kina rutul for now
-    ad_list = []
-
-    for tracking_device_id, tracking_device in enumerate(reference_tracking_devices):
-        if not tracking_device.device.startswith(('MED', 'DIST')):
-            continue
-        previous_referring_id = tracking_device_id - 1
-        wad = len(tracking_device.source_sentence.transcription[:tracking_device.source_sentence.transcription.find(tracking_device.form)].split())
-        while previous_referring_id != -1:
-            previous_referring = reference_tracking_devices[previous_referring_id]
-            sentence_transcription = previous_referring.source_sentence.transcription
-            if tracking_device.referent == previous_referring.referent and previous_referring.device != 'ZERO':
-                wad += len(sentence_transcription[sentence_transcription.find(previous_referring.form):].split())
-                sentences_transcriptions = [sent.transcription for sent in sentences]
-                wad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(sentence_transcription) + 1:sentences_transcriptions.index(tracking_device.source_sentence.transcription)]).split())
-                if previous_referring.source_sentence.transcription == tracking_device.source_sentence.transcription:
-                    wad = len(sentence_transcription[sentence_transcription.find(previous_referring.form):sentence_transcription.find(tracking_device.form)].split())
-                wad_seconds = tracking_device.start - previous_referring.end
-                print(tracking_device.form, previous_referring.form, wad, wad_seconds)
-                ad_list.append((tracking_device, previous_referring, wad, wad_seconds))
-                break
-            previous_referring_id -= 1
-        else:
-            IndexError("Previous referring is not found")
+            raise IndexError(f"Previous referring is not found {tracking_device.form, tracking_start}")
 
     return ad_list
 
 def auto_annotation(data_list):
     auto_annotated_data_list = []
-    for tracking_device, previous_referring, ad, ad_seconds in data_list:
+    for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds in data_list:
         if '_NP' in tracking_device.device:
             syntactic_position = 'ADNOM'
         else:
@@ -197,59 +213,56 @@ def auto_annotation(data_list):
             animacy = 'ANIM'
         else:
             animacy = 'INANIM'
-        auto_annotated_data_list.append((tracking_device, previous_referring,
-                                        ad, ad_seconds, syntactic_position, demonstrative_type, animacy))
+        auto_annotated_data_list.append((tracking_device, previous_referring, previous_explicit_referring,
+                                        ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy))
 
     return auto_annotated_data_list
-def write_ad_values(data_list, filename):
+def write_ad_values(data_list, filename, text_length):
     lang = filename.split('_')[0]
     with open('ad_values.csv', 'a', encoding='utf-8') as f:
-        for tracking_device, previous_referring, ad, ad_seconds, syntactic_position, demonstrative_type, animacy \
+        for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy \
                 in data_list:
-            f.write('\t'.join([lang, str(ad), str(ad_seconds), demonstrative_type, syntactic_position, animacy,
+            f.write('\t'.join([lang, str(ad), str(ad_seconds), str(wad), str(wad_seconds),
+                               demonstrative_type, syntactic_position, animacy,
                                tracking_device.device, tracking_device.form, tracking_device.referent,
-                               str(tracking_device.start), str(tracking_device.end), tracking_device.source_sentence.transcription,
+                               str(tracking_device.start), str(tracking_device.end),
+                               tracking_device.source_sentence.transcription,
                                tracking_device.source_sentence.translation,
                                previous_referring.device, previous_referring.form, previous_referring.referent,
                                str(previous_referring.start), str(previous_referring.end),
+                               previous_referring.mention,
                                previous_referring.source_sentence.transcription,
                                previous_referring.source_sentence.translation,
-                               filename
-                               ]) + '\n')
-
-def write_ad_values_medial_distl(data_list, filename):
-    lang = filename.split('_')[0]
-    with open('ad_values_med_dist.csv', 'a', encoding='utf-8') as f:  # ad_values.csv
-        for tracking_device, previous_referring, ad, ad_seconds, syntactic_position, demonstrative_type, animacy \
-                in data_list:
-            f.write('\t'.join([lang, str(ad), str(ad_seconds), demonstrative_type, syntactic_position, animacy,
-                               tracking_device.device, tracking_device.form, tracking_device.referent,
-                               str(tracking_device.start), str(tracking_device.end), tracking_device.source_sentence.transcription,
-                               tracking_device.source_sentence.translation,
-                               previous_referring.device, previous_referring.form, previous_referring.referent,
-                               str(previous_referring.start), str(previous_referring.end),
-                               previous_referring.source_sentence.transcription,
-                               previous_referring.source_sentence.translation,
+                               previous_explicit_referring.device, previous_explicit_referring.form, previous_explicit_referring.referent,
+                               str(previous_explicit_referring.start), str(previous_explicit_referring.end),
+                               previous_explicit_referring.mention,
+                               previous_explicit_referring.source_sentence.transcription,
+                               previous_explicit_referring.source_sentence.translation,
                                filename,
-                               previous_referring.mention
-                               ]) + '\n')
-
+                               text_length]) + '\n')
 def main():
-    with open('ad_values_med_dist.csv', 'w', encoding='utf-8') as f:  # ad_values.csv
-        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'dem', 'synt_pos', 'anim',
+    with open('ad_values.csv', 'w', encoding='utf-8') as f:
+        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'wad', 'wad_seconds',
+                           'dem', 'synt_pos', 'anim',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
-                           'anaphor_start', 'anaphor_end', 'anaphor_sentence_transcription',
+                           'anaphor_start', 'anaphor_end',
+                           'anaphor_sentence_transcription',
                            'anaphor_sentence_translation',
                            'previous_device', 'previous_form', 'previous_referent',
                            'previous_start', 'previous_end',
+                           'previous_mention',
                            'previous_sentence_transcription',
                            'previous_sentence_translation',
+                           'previous_explicit_device', 'previous_explicit_form', 'previous_explicit_referent',
+                           'previous_explicit_start', 'previous_explicit_end',
+                           'previous_explicit_mention',
+                           'previous_explicit_sentence_transcription',
+                           'previous_explicit_sentence_translation',
                            'filename',
-                           'mention']) + '\n')  # only for kina rutul
+                           'length_words']) + '\n')
 
     tier_names = ['translation', 'transcription_cyr', 'transcription_lat',
-                  'annotation_form', 'annotation_indexation', 'annotation_device']
-    tier_names.append('annotation_mention')  # only for kina rutul
+                  'annotation_form', 'annotation_indexation', 'annotation_device', 'annotation_mention']
 
     for root, dirs, files in walk('annotated_textgrids'):
         for filename in files:
@@ -257,14 +270,19 @@ def main():
                 continue  # only for kina rutul
             path_to_tg = join('annotated_textgrids', filename)
             tg = GridText.from_tg_file(path_to_tg, *tier_names)
+            text_length = str(tg.get_text_length_words())
             try:
                 reference_tracking_devices, sentences = tg.get_reference_tracking_devices()
             except Exception as ex:
                 print(filename, str(ex))
                 break
-            # write_ad_values(auto_annotation(calculate_distance(reference_tracking_devices, sentences)), filename)
-            write_ad_values_medial_distl(auto_annotation(calculate_distance_medial_distl(reference_tracking_devices, sentences)),
-                            filename)
+
+            try:
+                write_ad_values(auto_annotation(calculate_distance(reference_tracking_devices, sentences)), filename, text_length)
+            except Exception as ex:
+                print(filename, str(ex))
+                break
+
 
 
 if __name__ == '__main__':
