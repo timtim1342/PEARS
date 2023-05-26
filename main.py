@@ -79,13 +79,12 @@ class GridText:
             while True:
                 start_sentence, end_sentence, label_sentence = sentence_transcription_entries[sentence_id]
                 _, _, label_sentence_translation = sentence_translation_entries[sentence_id]
-
-                if (start_sentence <= start_device < end_sentence):
+                if (start_sentence <= start_device and start_device < end_sentence):
                     break
                 sentence_id += 1
 
             if label_device not in label_sentence and label_device != 'Ø':
-                print(label_device, ':', label_sentence)
+                print(start_device, label_device, ':', label_sentence)
                 raise IndexError("Device is not found")
 
             if label_device == 'Ø':
@@ -209,7 +208,7 @@ def auto_annotation(data_list):
         else:
             raise NameError("Type is not found!")
 
-        if tracking_device.referent in ('man', 'man2', 'boys', 'boy', 'girl', 'goat'):
+        if tracking_device.referent in ('man', 'man2', 'boys', 'boy', 'boy1', 'girl', 'goat'):
             animacy = 'ANIM'
         else:
             animacy = 'INANIM'
@@ -266,8 +265,8 @@ def main():
 
     for root, dirs, files in walk('annotated_textgrids'):
         for filename in files:
-            if filename.startswith('mhb_'):  # only for kina rutul
-                continue  # only for kina rutul
+            # if filename.startswith('mhb_'):  # only for kina rutul
+            #     continue  # only for kina rutul
             path_to_tg = join('annotated_textgrids', filename)
             tg = GridText.from_tg_file(path_to_tg, *tier_names)
             text_length = str(tg.get_text_length_words())
