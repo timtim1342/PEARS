@@ -1,6 +1,9 @@
 ---
 title: "Plots"
-output: html_document
+output:
+  html_document:
+    toc: true
+    theme: united
 ---
 
 ```{r setup, include=FALSE}
@@ -287,6 +290,7 @@ ggplot(mhb_data_plot2_adn, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fi
 
 ```{r include=FALSE}
 # prepare data
+dem_target = c('PROX', 'MED', 'DIST')
 kna_data %>% 
   filter(synt_pos=='INDEP') -> kna_data_plot3
 kna_data_plot3$filename = str_replace(kna_data_plot3$filename, '.TextGrid', '')
@@ -295,24 +299,29 @@ kna_data_plot3$filename = str_replace(kna_data_plot3$filename, 'kna_pears_', '')
 # kna_target = c('saa_8', 'vdm_3')
 # kna_data_plot3 %>% 
 #   filter(filename %in% kna_target) -> kna_data_plot3
-mhb_data %>% 
-  filter(synt_pos=='INDEP') -> mhb_data_plot3
-mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, '.TextGrid', '')
-mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, 'mhb_pears_', '')
-
 kna_data %>% 
   filter(synt_pos=='ADNOM') -> kna_data_plot3_adn
 kna_data_plot3_adn$filename = str_replace(kna_data_plot3_adn$filename, '.TextGrid', '')
 kna_data_plot3_adn$filename = str_replace(kna_data_plot3_adn$filename, 'kna_pears_', '')
+
 mhb_data %>% 
+  filter(synt_pos=='INDEP') %>% 
+  filter(dem %in% dem_target)-> mhb_data_plot3
+mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, '.TextGrid', '')
+mhb_data_plot3$filename = str_replace(mhb_data_plot3$filename, 'mhb_pears_', '')
+mhb_data %>% 
+  filter(dem %in% dem_target) %>% 
   filter(synt_pos=='ADNOM') -> mhb_data_plot3_adn
 mhb_data_plot3_adn$filename = str_replace(mhb_data_plot3_adn$filename, '.TextGrid', '')
 mhb_data_plot3_adn$filename = str_replace(mhb_data_plot3_adn$filename, 'mhb_pears_', '')
 ```
 
-## Independent position
+## Kina Rutul
 
-### Seconds
+### Independent position
+
+#### (N)AD
+##### Seconds
 
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
@@ -326,31 +335,13 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) +
   stat_summary(fun=mean, geom="point", size=2, color="red")+
   scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Kina Rutul")+
+  ggtitle("Kina Rutul: (N)AD in seconds for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (seconds)")
 ```
 
-```{r echo=FALSE}
-mhb_data_plot3 %>% 
-  group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
-```
-
-```{r echo=FALSE}
-ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
-  geom_boxplot()+
-  stat_summary(fun=mean, geom="point", size=2, color="red")+
-  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
-  theme_minimal()+
-  ggtitle("Mehweb Dargwa")+
-  labs(fill = "Reference-tracking device")+
-  xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (seconds)")
-```
-
-### Words
+##### Words
 
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
@@ -364,31 +355,57 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
   stat_summary(fun=mean, geom="point", size=2, color="red")+
   scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Kina Rutul")+
+  ggtitle("Kina Rutul: (N)AD in words for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (words)")
 ```
 
+#### WAD
+##### Seconds
+
 ```{r echo=FALSE}
-mhb_data_plot3 %>% 
+kna_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad))
+  summarise(mean_distance=mean(wad_seconds))
 ```
 
 ```{r echo=FALSE}
-ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) + 
   geom_boxplot()+
   stat_summary(fun=mean, geom="point", size=2, color="red")+
-  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Mehweb Dargwa")+
+  ggtitle("Kina Rutul: WAD in seconds for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (words)")
 ```
 
-## Adnominal position
+##### Words
+
+```{r echo=FALSE}
+kna_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=wad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul: WAD in words for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+### Adnominal position
+
+#### (N)AD
+##### Seconds
 
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
@@ -402,31 +419,13 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem
   stat_summary(fun=mean, geom="point", size=2, color="red")+
   scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Kina Rutul")+
+  ggtitle("Kina Rutul: (N)AD in seconds for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (seconds)")
 ```
 
-```{r echo=FALSE}
-mhb_data_plot3_adn %>% 
-  group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
-```
-
-```{r echo=FALSE}
-ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
-  geom_boxplot()+
-  stat_summary(fun=mean, geom="point", size=2, color="red")+
-  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
-  theme_minimal()+
-  ggtitle("Mehweb Dargwa")+
-  labs(fill = "Reference-tracking device")+
-  xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (seconds)")
-```
-
-### Words
+##### Words
 
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
@@ -440,11 +439,163 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
   stat_summary(fun=mean, geom="point", size=2, color="red")+
   scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Kina Rutul")+
+  ggtitle("Kina Rutul: (N)AD in words for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (words)")
 ```
+
+#### WAD
+##### Seconds
+
+```{r echo=FALSE}
+kna_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul: WAD in seconds for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+##### Words
+
+```{r echo=FALSE}
+kna_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad))
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Kina Rutul: WAD in words for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+## Mehweb Dargwa
+
+### Independent position
+
+#### (N)AD
+##### Seconds
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+  # , "ABOVE"="#E7298A", "BELOW"="#666666"
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD in seconds for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+##### Words
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD in words for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+#### WAD
+##### Seconds
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+  # , "ABOVE"="#E7298A", "BELOW"="#666666"
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in seconds for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+##### Words
+
+```{r echo=FALSE}
+mhb_data_plot3 %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=wad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in words for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+### Adnominal position
+
+#### (N)AD
+##### Seconds
+
+```{r echo=FALSE}
+mhb_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+  # , "ABOVE"="#E7298A", "BELOW"="#666666"
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD in seconds for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+##### Words
 
 ```{r echo=FALSE}
 mhb_data_plot3_adn %>% 
@@ -456,10 +607,321 @@ mhb_data_plot3_adn %>%
 ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) + 
   geom_boxplot()+
   stat_summary(fun=mean, geom="point", size=2, color="red")+
-  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
-  ggtitle("Mehweb Dargwa")+
+  ggtitle("Mehweb Dargwa: (N)AD in words for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (words)")
+```
+
+#### WAD
+##### Seconds
+
+```{r echo=FALSE}
+mhb_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad_seconds))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+  # , "ABOVE"="#E7298A", "BELOW"="#666666"
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in seconds for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (seconds)")
+```
+
+##### Words
+
+```{r echo=FALSE}
+mhb_data_plot3_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad))
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in words for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+# Discource Functions
+
+## Kina Rutul
+
+```{r include=FALSE}
+kna_data %>%
+  filter(grepl('_NP|NP', previous_explicit_device))%>% 
+  filter(synt_pos=="INDEP") %>% 
+  group_by(dem, previous_explicit_mention) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> kna_data_mention
+kna_data_mention$previous_explicit_mention = str_replace(kna_data_mention$previous_explicit_mention, '1', '2')
+
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_explicit_mention)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
+  theme_minimal()+
+  ggtitle("Independent uses")+
+  labs(fill = "Number of the mention with a demonstrative")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+kna_data %>%
+  filter(grepl('_NP|NP', previous_explicit_device))%>% 
+  filter(synt_pos=="ADNOM") %>% 
+  group_by(dem, previous_explicit_mention) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> kna_data_mention
+kna_data_mention$previous_explicit_mention = str_replace(kna_data_mention$previous_explicit_mention, '1', '2')
+
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_explicit_mention)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses")+
+  labs(fill = "Number of the mention with a demonstrative")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+kna_data %>%
+  group_by(filename, length_words, dem) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> kna_data_length
+kna_data_length$filename = str_replace(kna_data_length$filename, '.TextGrid', '')
+kna_data_length$filename = str_replace(kna_data_length$filename, 'kna_pears_', '')
+kna_data_length$new_filename = paste(kna_data_length$filename, kna_data_length$length_words, sep=':')
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_length, aes(x=reorder(new_filename, length_words), y=n, fill=dem)) +
+  geom_bar(stat="identity")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Demonstratives per text length")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Text")+
+  ylab("Number of uses")
+```
+
+```{r include=FALSE}
+kna_data %>% 
+  filter(previous_explicit_mention=='1') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->kna_data_first
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_first, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of the second use of a demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+kna_data %>% 
+  filter(synt_pos=='INDEP') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->kna_data_role
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of an independent demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+kna_data %>% 
+  filter(synt_pos=='ADNOM') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->kna_data_role
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of an adnominal demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+## Mehweb Dargwa
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(grepl('_NP|NP', previous_explicit_device))%>% 
+  filter(synt_pos=="INDEP") %>% 
+  group_by(dem, previous_explicit_mention) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> mhb_data_mention
+mhb_data_mention$previous_explicit_mention = str_replace(mhb_data_mention$previous_explicit_mention, '1', '2')
+
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_explicit_mention)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
+  theme_minimal()+
+  ggtitle("Independent uses")+
+  labs(fill = "Number of the mention with a demonstrative")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(grepl('_NP|NP', previous_explicit_device))%>% 
+  filter(synt_pos=="ADNOM") %>% 
+  group_by(dem, previous_explicit_mention) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> mhb_data_mention
+mhb_data_mention$previous_explicit_mention = str_replace(mhb_data_mention$previous_explicit_mention, '1', '2')
+
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_explicit_mention)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses")+
+  labs(fill = "Number of the mention with a demonstrative")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  group_by(filename, length_words, dem) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))-> mhb_data_length
+mhb_data_length$filename = str_replace(mhb_data_length$filename, '.TextGrid', '')
+mhb_data_length$filename = str_replace(mhb_data_length$filename, 'mhb_pears_', '')
+mhb_data_length$new_filename = paste(mhb_data_length$filename, mhb_data_length$length_words, sep=':')
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_length, aes(x=reorder(new_filename, length_words), y=n, fill=dem)) +
+  geom_bar(stat="identity")+
+  scale_fill_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Demonstratives per text length")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Text")+
+  ylab("Number of uses")
+```
+
+```{r include=FALSE}
+mhb_data %>% 
+  filter(previous_explicit_mention=='1') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_first
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_first, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of the second use of a demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>% 
+  filter(synt_pos=='INDEP') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_role
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of an independent demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>% 
+  filter(synt_pos=='ADNOM') %>% 
+  group_by(dem, role) %>% 
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_role
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  ggtitle("Referent of an adnominal demonstrative")+
+  labs(fill = "Role in text")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
 ```
