@@ -212,17 +212,21 @@ def auto_annotation(data_list):
             animacy = 'ANIM'
         else:
             animacy = 'INANIM'
+        if tracking_device.referent in ('man', 'boys', 'boy'):
+            protagonist = 'protagonist'
+        else:
+            protagonist = 'secondary character'
         auto_annotated_data_list.append((tracking_device, previous_referring, previous_explicit_referring,
-                                        ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy))
+                                        ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy, protagonist))
 
     return auto_annotated_data_list
 def write_ad_values(data_list, filename, text_length):
     lang = filename.split('_')[0]
     with open('ad_values.csv', 'a', encoding='utf-8') as f:
-        for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy \
+        for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy, protagonist \
                 in data_list:
             f.write('\t'.join([lang, str(ad), str(ad_seconds), str(wad), str(wad_seconds),
-                               demonstrative_type, syntactic_position, animacy,
+                               demonstrative_type, syntactic_position, animacy, protagonist,
                                tracking_device.device, tracking_device.form, tracking_device.referent,
                                str(tracking_device.start), str(tracking_device.end),
                                tracking_device.source_sentence.transcription,
@@ -242,7 +246,7 @@ def write_ad_values(data_list, filename, text_length):
 def main():
     with open('ad_values.csv', 'w', encoding='utf-8') as f:
         f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'wad', 'wad_seconds',
-                           'dem', 'synt_pos', 'anim',
+                           'dem', 'synt_pos', 'anim', 'role',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
                            'anaphor_start', 'anaphor_end',
                            'anaphor_sentence_transcription',
