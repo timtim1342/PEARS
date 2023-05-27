@@ -140,14 +140,15 @@ def calculate_distance(reference_tracking_devices, sentences):
 
             if tracking_referent == previous_referent:
                 ad += len(previous_source_transcription[previous_position:].split())
-                sentences_transcriptions = [sent.transcription for sent in sentences]
-                ad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(previous_source_transcription) + 1:sentences_transcriptions.index(tracking_source_transcription)]).split())
-
+                sentences_transcriptions = [sent.transcription for sent in sentences if sent.transcription != '']
+                between_sentences_transcription = sentences_transcriptions[sentences_transcriptions.index(previous_source_transcription) + 1:sentences_transcriptions.index(tracking_source_transcription)]
+                ad += len(' '.join(between_sentences_transcription).split())
                 if previous_source_transcription == tracking_source_transcription:
                     ad = len(previous_source_transcription[previous_position:tracking_position].split())
                 ad_seconds = tracking_start - previous_end
-
+                ad_clauses = len(between_sentences_transcription) + 1
                 wad = ad
+                wad_clauses = ad_clauses
                 if previous_referring.device != 'ZERO':
                     wad_seconds = ad_seconds
                     explicit_referring = previous_referring
@@ -165,19 +166,20 @@ def calculate_distance(reference_tracking_devices, sentences):
                         if tracking_referent == explicit_referent and explicit_device != 'ZERO':
                             wad += len(explicit_source_transcription[explicit_position:].split())
                             wad += len(previous_source_transcription[:previous_position].split())
-                            sentences_transcriptions = [sent.transcription for sent in sentences]
-                            wad += len(' '.join(sentences_transcriptions[sentences_transcriptions.index(explicit_source_transcription) + 1:sentences_transcriptions.index(previous_source_transcription)]).split())
+                            between_sentences_transcription_wad = sentences_transcriptions[sentences_transcriptions.index(explicit_source_transcription) + 1:sentences_transcriptions.index(previous_source_transcription)]
+                            wad += len(' '.join(between_sentences_transcription_wad).split())
 
                             if explicit_source_transcription == previous_source_transcription:
                                 wad = len(explicit_source_transcription[explicit_position:previous_position].split()) + ad
                             wad_seconds = tracking_start - explicit_end
+                            wad_clauses += len(between_sentences_transcription_wad) + 1
                             break
                         previous_id -= 1
                     else:
                         raise IndexError(f"Previous explicit referring is not found {tracking_device.form, tracking_start}")
 
-                print(tracking_device.form, previous_referring.form, explicit_referring.form, ad, ad_seconds, wad, wad_seconds)
-                ad_list.append((tracking_device, previous_referring, explicit_referring, ad, ad_seconds, wad, wad_seconds))
+                print(tracking_device.form, previous_referring.form, explicit_referring.form, ad, ad_seconds, ad_clauses, wad, wad_seconds, wad_clauses)
+                ad_list.append((tracking_device, previous_referring, explicit_referring, ad, ad_seconds, ad_clauses, wad, wad_seconds, wad_clauses))
                 break
             previous_id -= 1
         else:
@@ -187,7 +189,7 @@ def calculate_distance(reference_tracking_devices, sentences):
 
 def auto_annotation(data_list):
     auto_annotated_data_list = []
-    for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds in data_list:
+    for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, ad_clauses, wad, wad_seconds, wad_clauses in data_list:
         if '_NP' in tracking_device.device:
             syntactic_position = 'ADNOM'
         else:
@@ -217,15 +219,15 @@ def auto_annotation(data_list):
         else:
             protagonist = 'secondary character'
         auto_annotated_data_list.append((tracking_device, previous_referring, previous_explicit_referring,
-                                        ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy, protagonist))
+                                        ad, ad_seconds, ad_clauses, wad, wad_seconds, wad_clauses, syntactic_position, demonstrative_type, animacy, protagonist))
 
     return auto_annotated_data_list
 def write_ad_values(data_list, filename, text_length):
     lang = filename.split('_')[0]
     with open('ad_values.csv', 'a', encoding='utf-8') as f:
-        for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, wad, wad_seconds, syntactic_position, demonstrative_type, animacy, protagonist \
+        for tracking_device, previous_referring, previous_explicit_referring, ad, ad_seconds, ad_clauses, wad, wad_seconds, wad_clauses, syntactic_position, demonstrative_type, animacy, protagonist \
                 in data_list:
-            f.write('\t'.join([lang, str(ad), str(ad_seconds), str(wad), str(wad_seconds),
+            f.write('\t'.join([lang, str(ad), str(ad_seconds), str(ad_clauses), str(wad), str(wad_seconds), str(wad_clauses),
                                demonstrative_type, syntactic_position, animacy, protagonist,
                                tracking_device.device, tracking_device.form, tracking_device.referent,
                                str(tracking_device.start), str(tracking_device.end),
@@ -245,7 +247,7 @@ def write_ad_values(data_list, filename, text_length):
                                text_length]) + '\n')
 def main():
     with open('ad_values.csv', 'w', encoding='utf-8') as f:
-        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'wad', 'wad_seconds',
+        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'ad_clauses', 'wad', 'wad_seconds', 'wad_clauses'
                            'dem', 'synt_pos', 'anim', 'role',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
                            'anaphor_start', 'anaphor_end',
