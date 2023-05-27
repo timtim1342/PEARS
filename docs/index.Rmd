@@ -17,8 +17,8 @@ data = read_tsv('ad_values.csv')
 # kina rutul
 data %>% 
   filter(lang=='kna') -> kna_data
-kna_data %>% 
-  filter(dem != 'SELF') -> kna_data  # only for demonstartives
+# kna_data %>% 
+#   filter(dem != 'SELF') -> kna_data  # only for demonstartives
 # mehweb dargwa
 data %>% 
   filter(lang=='mhb') -> mhb_data
@@ -326,7 +326,7 @@ mhb_data_plot3_adn$filename = str_replace(mhb_data_plot3_adn$filename, 'mhb_pear
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
+  summarise(mean_distance=mean(ad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -346,7 +346,7 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) +
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad))
+  summarise(mean_distance=mean(ad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -367,7 +367,7 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad_seconds))
+  summarise(mean_distance=mean(wad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -387,7 +387,7 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) 
 ```{r echo=FALSE}
 kna_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad))
+  summarise(mean_distance=mean(wad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -410,7 +410,7 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=wad, fill=dem)) +
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
+  summarise(mean_distance=mean(ad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -430,7 +430,7 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad))
+  summarise(mean_distance=mean(ad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -451,7 +451,7 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad_seconds))
+  summarise(mean_distance=mean(wad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -471,7 +471,7 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad_seconds, fill=de
 ```{r echo=FALSE}
 kna_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad))
+  summarise(mean_distance=mean(wad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -488,15 +488,30 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad, fill=dem)) +
 
 ## Mehweb Dargwa
 
+```{r echo=FALSE}
+mhb_target_clauses = c('abk_1', 'zkh_3', 'ptm_8', 'kzm_4')
+mhb_target = c('abk_1', 'zkh_3', 'ptm_8', 'kzm_4', 'isr_5', 'mgm_6')
+
+mhb_data_plot3 %>% 
+  filter(filename %in% mhb_target_clauses)->mhb_data_plot3_clauses
+mhb_data_plot3_adn %>% 
+  filter(filename %in% mhb_target_clauses)->mhb_data_plot3_clauses_adn
+
+mhb_data_plot3 %>% 
+  filter(filename %in% mhb_target)->mhb_data_plot3
+mhb_data_plot3_adn %>% 
+  filter(filename %in% mhb_target)->mhb_data_plot3_adn
+```
+
 ### Independent position
 
 #### (N)AD
-##### Seconds
+##### Seconds (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
+  summarise(mean_distance=mean(ad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -511,12 +526,12 @@ ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem)) +
   ylab("Anaphoric distance (seconds)")
 ```
 
-##### Words
+##### Words (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad))
+  summarise(mean_distance=mean(ad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -531,13 +546,33 @@ ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
   ylab("Anaphoric distance (words)")
 ```
 
+##### Clauses (based on abk_1, zkh_3, ptm_8, kzm_4)
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n())
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_clauses, aes(x=factor(dem, dems_order), y=ad_clauses, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD in clauses for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
 #### WAD
-##### Seconds
+##### Seconds (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad_seconds))
+  summarise(mean_distance=mean(wad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -552,12 +587,12 @@ ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) 
   ylab("Anaphoric distance (seconds)")
 ```
 
-##### Words
+##### Words (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3 %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad))
+  summarise(mean_distance=mean(wad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -572,15 +607,35 @@ ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=wad, fill=dem)) +
   ylab("Anaphoric distance (words)")
 ```
 
+##### Clauses (based on abk_1, zkh_3, ptm_8, kzm_4)
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad_clauses), n=n())
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_clauses, aes(x=factor(dem, dems_order), y=wad_clauses, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in clauses for independent uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
 ### Adnominal position
 
 #### (N)AD
-##### Seconds
+##### Seconds (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad_seconds))
+  summarise(mean_distance=mean(ad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -595,12 +650,12 @@ ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad_seconds, fill=dem
   ylab("Anaphoric distance (seconds)")
 ```
 
-##### Words
+##### Words (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(ad))
+  summarise(mean_distance=mean(ad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -615,13 +670,33 @@ ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
   ylab("Anaphoric distance (words)")
 ```
 
+##### Clauses (based on abk_1, zkh_3, ptm_8, kzm_4)
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n())
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_clauses_adn, aes(x=factor(dem, dems_order), y=ad_clauses, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD in clauses for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
 #### WAD
-##### Seconds
+##### Seconds (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad_seconds))
+  summarise(mean_distance=mean(wad_seconds), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -636,12 +711,12 @@ ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad_seconds, fill=de
   ylab("Anaphoric distance (seconds)")
 ```
 
-##### Words
+##### Words (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
 
 ```{r echo=FALSE}
 mhb_data_plot3_adn %>% 
   group_by(dem) %>% 
-  summarise(mean_distance=mean(wad))
+  summarise(mean_distance=mean(wad), n=n())
 ```
 
 ```{r echo=FALSE}
@@ -651,6 +726,26 @@ ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad, fill=dem)) +
   scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
   theme_minimal()+
   ggtitle("Mehweb Dargwa: WAD in words for adnominal uses")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Reference-tracking device")+
+  ylab("Anaphoric distance (words)")
+```
+
+##### Clauses (based on abk_1, zkh_3, ptm_8, kzm_4)
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses_adn %>% 
+  group_by(dem) %>% 
+  summarise(mean_distance=mean(wad_clauses), n=n())
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot3_clauses_adn, aes(x=factor(dem, dems_order), y=wad_clauses, fill=dem)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="red")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: WAD in clauses for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
   ylab("Anaphoric distance (words)")
