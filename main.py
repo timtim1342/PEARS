@@ -247,7 +247,7 @@ def write_ad_values(data_list, filename, text_length):
                                text_length]) + '\n')
 def main():
     with open('ad_values.csv', 'w', encoding='utf-8') as f:
-        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'ad_clauses', 'wad', 'wad_seconds', 'wad_clauses'
+        f.write('\t'.join(['lang', 'ad', 'ad_seconds', 'ad_clauses', 'wad', 'wad_seconds', 'wad_clauses',
                            'dem', 'synt_pos', 'anim', 'role',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
                            'anaphor_start', 'anaphor_end',
