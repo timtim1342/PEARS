@@ -143,10 +143,12 @@ def calculate_distance(reference_tracking_devices, sentences):
                 sentences_transcriptions = [sent.transcription for sent in sentences if sent.transcription != '']
                 between_sentences_transcription = sentences_transcriptions[sentences_transcriptions.index(previous_source_transcription) + 1:sentences_transcriptions.index(tracking_source_transcription)]
                 ad += len(' '.join(between_sentences_transcription).split())
+                ad_clauses = len(between_sentences_transcription) + 1
                 if previous_source_transcription == tracking_source_transcription:
                     ad = len(previous_source_transcription[previous_position:tracking_position].split())
+                    ad_clauses = 0
                 ad_seconds = tracking_start - previous_end
-                ad_clauses = len(between_sentences_transcription) + 1
+
                 wad = ad
                 wad_clauses = ad_clauses
                 if previous_referring.device != 'ZERO':
@@ -168,11 +170,12 @@ def calculate_distance(reference_tracking_devices, sentences):
                             wad += len(previous_source_transcription[:previous_position].split())
                             between_sentences_transcription_wad = sentences_transcriptions[sentences_transcriptions.index(explicit_source_transcription) + 1:sentences_transcriptions.index(previous_source_transcription)]
                             wad += len(' '.join(between_sentences_transcription_wad).split())
-
+                            wad_clauses += len(between_sentences_transcription_wad) + 1
                             if explicit_source_transcription == previous_source_transcription:
                                 wad = len(explicit_source_transcription[explicit_position:previous_position].split()) + ad
+                                wad_clauses = 0
                             wad_seconds = tracking_start - explicit_end
-                            wad_clauses += len(between_sentences_transcription_wad) + 1
+
                             break
                         previous_id -= 1
                     else:
