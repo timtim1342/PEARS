@@ -114,6 +114,24 @@ mhb_data %>%
   summarise(n=n()) %>% 
   mutate(perc = n / sum(n) * 100) -> mhb_data_plot1_per_synt_pos
 
+
+# per speaker
+kna_data %>%
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> kna_data_speaker_overall
+kna_data_speaker_overall$filename = str_replace(kna_data_speaker_overall$filename, '.TextGrid', '')
+kna_data_speaker_overall$filename = str_replace(kna_data_speaker_overall$filename, 'kna_pears_', '')
+mhb_data %>%
+  group_by(filename, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n)) -> mhb_data_speaker_overall
+mhb_data_speaker_overall$filename = str_replace(mhb_data_speaker_overall$filename, '.TextGrid', '')
+mhb_data_speaker_overall$filename = str_replace(mhb_data_speaker_overall$filename, 'mhb_pears_', '')
+
+
 # per speaker
 kna_data %>%
   filter(synt_pos=='INDEP') %>% 
@@ -148,6 +166,59 @@ mhb_data %>%
   mutate(total_n_ref_dev = sum(n)) -> mhb_data_plot2_adn
 mhb_data_plot2_adn$filename = str_replace(mhb_data_plot2_adn$filename, '.TextGrid', '')
 mhb_data_plot2_adn$filename = str_replace(mhb_data_plot2_adn$filename, 'mhb_pears_', '')
+
+# general
+data %>% 
+  group_by(lang, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->general_all
+```
+
+### All uses
+
+```{r echo=FALSE}
+ggplot(general_all, aes(x=lang, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("All uses of demonstratives")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Language")+
+  ylab("Percentage (per language)")
+```
+
+### Mehweb Dargwa uses (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)
+
+```{r include=FALSE}
+mhb_target = c('abk_1', 'zkh_3', 'ptm_8', 'kzm_4', 'isr_5', 'mgm_6')
+mhb_data$filename = str_replace(mhb_data$filename, '.TextGrid', '')
+mhb_data$filename = str_replace(mhb_data$filename, 'mhb_pears_', '')
+
+mhb_data %>% 
+  filter(filename %in% mhb_target) %>% 
+  group_by(lang, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->general_all_not_al
+
+```
+
+```{r echo=FALSE}
+ggplot(general_all_not_al, aes(x=lang, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa uses of demonstratives (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Language")+
+  ylab("Percentage (per language)")
 ```
 
 ### Number of uses of each demonstrative in the independent position
@@ -224,6 +295,58 @@ ggplot(mhb_data_plot1_per_synt_pos, aes(x=synt_pos, y=perc, fill=factor(dem, dem
   labs(fill = "Reference-tracking device")+
   xlab("Syntactic position")+
   ylab("Percentage (per synt. position)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(filename %in% mhb_target) %>% 
+  group_by(synt_pos, dem) %>% 
+  summarise(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) -> mhb_data_plot1_per_synt_pos_not_all
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_plot1_per_synt_pos_not_all, aes(x=synt_pos, y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  #scale_fill_brewer(palette="Dark2")+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Syntactic position")+
+  ylab("Percentage (per synt. position)")
+```
+
+### Demonstratives per speaker (sorted by the total number of uses)
+
+```{r echo=FALSE}
+ggplot(kna_data_speaker_overall, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Kina Rutul")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_speaker_overall, aes(x=reorder(filename, -total_n_ref_dev), y=perc, fill=factor(dem, dems_order))) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_manual( values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Mehweb Dargwa")+
+  labs(fill = "Reference-tracking device")+
+  xlab("Speaker/text")+
+  ylab("Percentage (per speaker/text)")
 ```
 
 ### Independent demonstratives per speaker (sorted by the total number of uses)
@@ -379,7 +502,7 @@ ggplot(kna_data_plot3, aes(x=factor(dem, dems_order), y=wad_seconds, fill=dem)) 
   ggtitle("Kina Rutul: WAD in seconds for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (seconds)")
 ```
 
 ##### Words
@@ -463,7 +586,7 @@ ggplot(kna_data_plot3_adn, aes(x=factor(dem, dems_order), y=wad_seconds, fill=de
   ggtitle("Kina Rutul: WAD in seconds for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (seconds)")
 ```
 
 ##### Words
@@ -501,6 +624,38 @@ mhb_data_plot3 %>%
   filter(filename %in% mhb_target)->mhb_data_plot3
 mhb_data_plot3_adn %>% 
   filter(filename %in% mhb_target)->mhb_data_plot3_adn
+```
+
+### Cf. Givón's
+
+#### Adnominal
+
+```{r echo=FALSE}
+mhb_data %>% 
+  filter(synt_pos=='ADNOM') %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n(), sd=sd(ad_clauses), med=median(ad_clauses))
+```
+
+#### Independent
+
+```{r echo=FALSE}
+mhb_data %>% 
+  filter(synt_pos=='INDEP') %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n(), sd=sd(ad_clauses), med=median(ad_clauses))
+```
+
+#### All
+
+```{r echo=FALSE}
+ggplot(mhb_data, aes(x=synt_pos, y=ad_clauses, fill=synt_pos)) + 
+  geom_boxplot()+
+  stat_summary(fun=mean, geom="point", size=2, color="white")+
+  scale_fill_manual( values = c("ADNOM" = "#E41A1C","INDEP" = "#377EB8"))+
+  theme_minimal()+
+  ggtitle("Mehweb Dargwa: (N)AD")+
+  labs(fill = "Syntactic position")+
+  xlab("Syntactic position")+
+  ylab("Anaphoric distance (clauses)")
 ```
 
 ### Independent position
@@ -550,6 +705,11 @@ ggplot(mhb_data_plot3, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
 
 ```{r echo=FALSE}
 mhb_data_plot3_clauses %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n(), sd=sd(ad_clauses), med=median(ad_clauses))
+```
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses %>% 
   group_by(dem) %>% 
   summarise(mean_distance=mean(ad_clauses), n=n())
 ```
@@ -563,7 +723,7 @@ ggplot(mhb_data_plot3_clauses, aes(x=factor(dem, dems_order), y=ad_clauses, fill
   ggtitle("Mehweb Dargwa: (N)AD in clauses for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (clauses)")
 ```
 
 #### WAD
@@ -624,7 +784,7 @@ ggplot(mhb_data_plot3_clauses, aes(x=factor(dem, dems_order), y=wad_clauses, fil
   ggtitle("Mehweb Dargwa: WAD in clauses for independent uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (clauses)")
 ```
 
 ### Adnominal position
@@ -674,6 +834,11 @@ ggplot(mhb_data_plot3_adn, aes(x=factor(dem, dems_order), y=ad, fill=dem)) +
 
 ```{r echo=FALSE}
 mhb_data_plot3_clauses_adn %>% 
+  summarise(mean_distance=mean(ad_clauses), n=n(), sd=sd(ad_clauses), med=median(ad_clauses))
+```
+
+```{r echo=FALSE}
+mhb_data_plot3_clauses_adn %>% 
   group_by(dem) %>% 
   summarise(mean_distance=mean(ad_clauses), n=n())
 ```
@@ -687,7 +852,7 @@ ggplot(mhb_data_plot3_clauses_adn, aes(x=factor(dem, dems_order), y=ad_clauses, 
   ggtitle("Mehweb Dargwa: (N)AD in clauses for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (clauses)")
 ```
 
 #### WAD
@@ -748,12 +913,62 @@ ggplot(mhb_data_plot3_clauses_adn, aes(x=factor(dem, dems_order), y=wad_clauses,
   ggtitle("Mehweb Dargwa: WAD in clauses for adnominal uses")+
   labs(fill = "Reference-tracking device")+
   xlab("Reference-tracking device")+
-  ylab("Anaphoric distance (words)")
+  ylab("Anaphoric distance (clauses)")
 ```
 
-# Discource Functions
+# Discourse Functions
 
 ## Kina Rutul
+
+```{r include=FALSE}
+kna_data %>%
+  filter(synt_pos=="INDEP") %>%
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->kna_data_referent
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_referent, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B"))+
+  theme_minimal()+
+  ggtitle("Independent uses")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+kna_data %>%
+  filter(synt_pos=="ADNOM") %>%
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->kna_data_referent_adn
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_referent_adn, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
 
 ```{r include=FALSE}
 kna_data %>%
@@ -776,7 +991,7 @@ ggplot(kna_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_ex
   scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
   theme_minimal()+
   ggtitle("Independent uses")+
-  labs(fill = "Number of the mention with a demonstrative")+
+  labs(fill = "Number of the current (explicit) mention")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
 ```
@@ -802,7 +1017,7 @@ ggplot(kna_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_ex
   scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
   theme_minimal()+
   ggtitle("Adnominal uses")+
-  labs(fill = "Number of the mention with a demonstrative")+
+  labs(fill = "Number of the current (explicit) mention")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
 ```
@@ -828,6 +1043,28 @@ ggplot(kna_data_length, aes(x=reorder(new_filename, length_words), y=n, fill=dem
   labs(fill = "Reference-tracking device")+
   xlab("Text")+
   ylab("Number of uses")
+```
+
+```{r include=FALSE}
+kna_data %>% 
+  filter(anaphor_referent=='boy') %>%  
+  group_by(filename) %>% 
+  mutate(min_start = min(anaphor_start)) %>% 
+  mutate(norm_start = anaphor_start - min_start)-> kna_data_boy
+kna_data_boy$filename = str_replace(kna_data_boy$filename, '.TextGrid', '')
+kna_data_boy$filename = str_replace(kna_data_boy$filename, 'kna_pears_', '')
+kna_data_boy$new_filename = paste(kna_data_boy$filename, kna_data_boy$length_words, sep=':')
+```
+
+```{r echo=FALSE}
+ggplot(kna_data_boy, aes(x=norm_start, y=reorder(new_filename, length_words), color=dem)) +
+  geom_point(aes(shape=synt_pos), size=2)+
+  ggtitle("Reference strategies for the boy")+
+  theme_minimal()+
+  scale_color_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77"))+
+  labs(color = "Reference-tracking device", shape="Syntactic position")+
+  xlab("Duration of text")+
+  ylab("Referent")
 ```
 
 ```{r include=FALSE}
@@ -891,8 +1128,176 @@ ggplot(kna_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
 
 ```{r include=FALSE}
 mhb_data %>%
+  filter(synt_pos=="INDEP") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B"))+
+  theme_minimal()+
+  ggtitle("Independent uses")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(synt_pos=="ADNOM") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent_adn
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent_adn, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_target = c('abk_1', 'zkh_3', 'ptm_8', 'kzm_4', 'isr_5', 'mgm_6')
+mhb_data$filename = str_replace(mhb_data$filename, '.TextGrid', '')
+mhb_data$filename = str_replace(mhb_data$filename, 'mhb_pears_', '')
+mhb_data %>%
+  filter(filename %in% mhb_target) %>% 
+  filter(synt_pos=="INDEP") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B", "tree" = "#009666", "apron" = "#115898"))+
+  theme_minimal()+
+  ggtitle("Independent uses (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(filename %in% mhb_target) %>% 
+  filter(synt_pos=="ADNOM") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent_adn
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent_adn, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B", "tree" = "#009666", "apron" = "#115898"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_target = c('abk_1', 'zkh_3', 'ptm_8', 'kzm_4', 'isr_5', 'mgm_6')
+mhb_data$filename = str_replace(mhb_data$filename, '.TextGrid', '')
+mhb_data$filename = str_replace(mhb_data$filename, 'mhb_pears_', '')
+mhb_data %>%
+  filter(!filename %in% mhb_target) %>% 
+  filter(synt_pos=="INDEP") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B", "tree" = "#009666", "apron" = "#115898"))+
+  theme_minimal()+
+  ggtitle("Independent uses (based on mjs_2, zlm_9, anv_7)")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(!filename %in% mhb_target) %>% 
+  filter(synt_pos=="ADNOM") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
+  group_by(dem, anaphor_referent) %>%
+  summarize(n=n()) %>% 
+  mutate(perc = n / sum(n) * 100) %>% 
+  mutate(total_n_ref_dev = sum(n))->mhb_data_referent_adn
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_referent_adn, aes(x=factor(dem, dems_order), y=perc, fill=anaphor_referent)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=n), vjust=1.6, color="black",
+            position = position_dodge(0.9), size=3.5)+
+  #scale_fill_brewer(palette="Set1")+
+  scale_fill_manual( values = c("boy" = "#2F4F4F","man" = "#D3D3D3", "boys" ="#A9A9A9",
+                                "man2" = "#8A2BE2", "boy1"= "#FF69B4", "girl" = "#800080",
+                                "basket" = "#006400", "bike" = "#20B2AA", "hat" = "#66CDAA", "stone" = "#87CEEB", "scarf" = "#808000","pears" = "#00008B", "tree" = "#009666", "apron" = "#115898"))+
+  theme_minimal()+
+  ggtitle("Adnominal uses (based on mjs_2, zlm_9, anv_7)")+
+  labs(fill = "Referents")+
+  xlab("Reference-tracking device")+
+  ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>%
+  filter(filename %in% mhb_target) %>%
   filter(grepl('_NP|NP', previous_explicit_device))%>% 
   filter(synt_pos=="INDEP") %>% 
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
   group_by(dem, previous_explicit_mention) %>% 
   summarize(n=n()) %>% 
   mutate(perc = n / sum(n) * 100) %>% 
@@ -909,7 +1314,7 @@ ggplot(mhb_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_ex
   #scale_fill_brewer(palette="Set1")+
   scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
   theme_minimal()+
-  ggtitle("Independent uses")+
+  ggtitle("Independent uses (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
   labs(fill = "Number of the mention with a demonstrative")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
@@ -917,8 +1322,10 @@ ggplot(mhb_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_ex
 
 ```{r include=FALSE}
 mhb_data %>%
+  filter(filename %in% mhb_target) %>%
   filter(grepl('_NP|NP', previous_explicit_device))%>% 
-  filter(synt_pos=="ADNOM") %>% 
+  filter(synt_pos=="ADNOM") %>%
+  filter(dem %in% c('PROX', 'MED', 'DIST')) %>% 
   group_by(dem, previous_explicit_mention) %>% 
   summarize(n=n()) %>% 
   mutate(perc = n / sum(n) * 100) %>% 
@@ -935,7 +1342,7 @@ ggplot(mhb_data_mention, aes(x=factor(dem, dems_order), y=perc, fill=previous_ex
   #scale_fill_brewer(palette="Set1")+
   scale_fill_manual( values = c(">2" = "#E9999C","2" = "#AEEEEE"))+
   theme_minimal()+
-  ggtitle("Adnominal uses")+
+  ggtitle("Adnominal uses (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
   labs(fill = "Number of the mention with a demonstrative")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
@@ -966,6 +1373,7 @@ ggplot(mhb_data_length, aes(x=reorder(new_filename, length_words), y=n, fill=dem
 
 ```{r include=FALSE}
 mhb_data %>% 
+  filter(filename %in% mhb_target) %>%
   filter(previous_explicit_mention=='1') %>% 
   group_by(dem, role) %>% 
   summarize(n=n()) %>% 
@@ -977,14 +1385,15 @@ mhb_data %>%
 ggplot(mhb_data_first, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
   geom_bar(stat="identity")+
   theme_minimal()+
-  ggtitle("Referent of the second use of a demonstrative")+
+  ggtitle("Referent of the second use of a demonstrative (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
   labs(fill = "Role in text")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
 ```
 
 ```{r include=FALSE}
-mhb_data %>% 
+mhb_data %>%
+  filter(filename %in% mhb_target) %>%
   filter(synt_pos=='INDEP') %>% 
   group_by(dem, role) %>% 
   summarize(n=n()) %>% 
@@ -996,7 +1405,7 @@ mhb_data %>%
 ggplot(mhb_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
   geom_bar(stat="identity")+
   theme_minimal()+
-  ggtitle("Referent of an independent demonstrative")+
+  ggtitle("Referent of an independent demonstrative (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
   labs(fill = "Role in text")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
@@ -1004,6 +1413,7 @@ ggplot(mhb_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
 
 ```{r include=FALSE}
 mhb_data %>% 
+  filter(filename %in% mhb_target) %>%
   filter(synt_pos=='ADNOM') %>% 
   group_by(dem, role) %>% 
   summarize(n=n()) %>% 
@@ -1015,8 +1425,54 @@ mhb_data %>%
 ggplot(mhb_data_role, aes(x=factor(dem, dems_order), y=perc, fill=role)) +
   geom_bar(stat="identity")+
   theme_minimal()+
-  ggtitle("Referent of an adnominal demonstrative")+
+  ggtitle("Referent of an adnominal demonstrative (based on abk_1, zkh_3, ptm_8, kzm_4, isr_5, mgm_6)")+
   labs(fill = "Role in text")+
   xlab("Reference-tracking device")+
   ylab("Percentage (per ref.-track. device)")
+```
+
+```{r include=FALSE}
+mhb_data %>% 
+  filter(anaphor_referent=='boy') %>%  
+  group_by(filename) %>% 
+  mutate(min_start = min(anaphor_start)) %>% 
+  mutate(norm_start = anaphor_start - min_start)-> mhb_data_boy
+mhb_data_boy$filename = str_replace(mhb_data_boy$filename, '.TextGrid', '')
+mhb_data_boy$filename = str_replace(mhb_data_boy$filename, 'mhb_pears_', '')
+mhb_data_boy$new_filename = paste(mhb_data_boy$filename, mhb_data_boy$length_words, sep=':')
+```
+
+```{r echo=FALSE}
+ggplot(mhb_data_boy, aes(x=norm_start, y=reorder(new_filename, length_words), color=dem)) +
+  geom_point(aes(shape=synt_pos), size=2)+
+  ggtitle("Reference strategies for the boy")+
+  theme_minimal()+
+  scale_color_manual(values = c("PROX" = "#7570B3","MED" = "#D95F02", "DIST" = "#1B9E77", "ABOVE"="#E7298A", "BELOW"="#666666"))+
+  labs(color = "Reference-tracking device", shape="Syntactic position")+
+  xlab("Duration of text")+
+  ylab("Referent")
+
+```
+
+```{r include=FALSE}
+data -> data_denc
+data_denc$filename = str_replace(data_denc$filename, '.TextGrid', '')
+data_denc$new_filename = paste(data_denc$filename, data_denc$length_words, sep=':')
+
+
+data_denc %>% 
+  group_by(filename) %>% 
+  mutate(n = n()) %>% 
+  mutate(denc = n / length_words * 100)->a
+```
+
+```{r echo=FALSE}
+ggplot(a, aes(x=new_filename, y=denc, color=lang)) +
+  geom_point()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1))+
+  ggtitle("Dencity of demonstratives per text")+
+  labs(color = "Language")+
+  xlab("Text")+
+  ylab("Dencity (n of uses per 100 words)")
 ```
