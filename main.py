@@ -3,7 +3,7 @@ from os.path import join
 from os import walk
 
 
-class Sentence:
+class Sentence:  # .
     def __init__(self, transcription, translation):
         self.transcription = transcription
         self.translation = translation
