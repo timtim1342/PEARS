@@ -49,7 +49,7 @@ def auto_annotation_light(data_list):
 
 def write_ad_values_light(data_list, filename, text_length):
     lang = filename.split('_')[0]
-    with open('ad_values.csv', 'a', encoding='utf-8') as f:
+    with open('extracted_demonstrartives.csv', 'a', encoding='utf-8') as f:
         for tracking_device, syntactic_position, demonstrative_type, animacy, protagonist \
                 in data_list:
             f.write('\t'.join([lang,
@@ -62,7 +62,7 @@ def write_ad_values_light(data_list, filename, text_length):
                                text_length]) + '\n')
 
 def main():
-    with open('ad_values.csv', 'w', encoding='utf-8') as f:
+    with open('extracted_demonstrartives.csv', 'w', encoding='utf-8') as f:
         f.write('\t'.join(['lang',
                            'dem', 'synt_pos', 'anim', 'role',
                            'anaphor_device', 'anaphor_form', 'anaphor_referent',
