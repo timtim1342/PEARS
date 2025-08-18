@@ -73,6 +73,7 @@ class GridText:
 
         device_id = 0
         for start_device, end_device, label_device in annotation_form_entries:
+            label_device = label_device.replace('?', '')
             if annotation_indexation_entries[device_id][2] in ('pred', ''):
                 device_id += 1
                 continue
@@ -83,7 +84,7 @@ class GridText:
                     break
                 sentence_id += 1
 
-            if label_device not in label_sentence and label_device != 'Ø':
+            if label_device.lower() not in label_sentence.lower() and label_device != 'Ø':
                 print(start_device, label_device, ':', label_sentence)
                 raise IndexError("Device is not found")
 
