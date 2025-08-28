@@ -29,6 +29,12 @@ def auto_annotation_light(data_list):
             demonstrative_type = 'GO'
         elif 'HA' in tracking_device.device:
             demonstrative_type = 'HA'
+        elif 'DIST&LEVEL' in tracking_device.device:
+            demonstrative_type = 'DIST&LEVEL'
+        elif 'DIST&ABOVE' in tracking_device.device:
+            demonstrative_type = 'DIST&LEVEL'
+        elif 'DIST&LEVEL' in tracking_device.device:
+            demonstrative_type = 'DIST&LEVEL' #...
         else:
             print(tracking_device.device)
             continue
